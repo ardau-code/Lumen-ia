@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lumen — assistant IA</title>
+<style>
+:root{--bg:#f6f5f1;--panel:#ffffff;--side:#ecebe5;--ink:#1c1b22;--mute:#6b6a75;--line:#dcdad2;--acc:#4b3fe0;--acc2:#12b5a6;--accInk:#fff;--err:#b3261e;--errbg:#fbe9e7;--code:#1c1b22;--codeInk:#eceaff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121116;--panel:#1b1a21;--side:#17161c;--ink:#ecebf2;--mute:#9d9bab;--line:#2c2a35;--acc:#8b82ff;--acc2:#3fd6c6;--accInk:#10101a;--err:#ffb4ab;--errbg:#3a1d1b;--code:#0c0b10;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121116;--panel:#1b1a21;--side:#17161c;--ink:#ecebf2;--mute:#9d9bab;--line:#2c2a35;--acc:#8b82ff;--acc2:#3fd6c6;--accInk:#10101a;--err:#ffb4ab;--errbg:#3a1d1b;--code:#0c0b10;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Avenir Next","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.app{display:flex;height:100%}
+.side{width:288px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px;gap:10px;flex-shrink:0;transition:transform .25s}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;letter-spacing:-.02em;padding:4px 4px 8px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:999px;font-weight:600}
+.btn.pri{background:var(--acc);color:var(--accInk)}
+.btn.pri:hover{filter:brightness(1.08)}
+.search{width:100%;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
+.list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.item{display:flex;align-items:center;gap:4px;border-radius:12px;padding:2px 4px 2px 12px}
+.item:hover,.item.on{background:var(--panel)}
+.item .t{flex:1;text-align:left;padding:9px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
+.item input{flex:1;min-width:0;padding:6px 8px;border-radius:8px;border:1px solid var(--acc);background:var(--panel)}
+.ic{padding:6px 8px;border-radius:8px;color:var(--mute);font-size:13px}
+.ic:hover{background:var(--line);color:var(--ink)}
+.ic.danger{color:var(--err)}
+.empty-list{color:var(--mute);font-size:14px;padding:12px}
+.foot{display:flex;gap:8px}
+.foot .btn{flex:1;background:var(--panel);border:1px solid var(--line);font-size:14px;padding:9px}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+header .sp{flex:1}
+.chip{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.round{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center}
+#menu{display:none}
+.msgs{flex:1;overflow-y:auto;padding:24px 16px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.m{display:flex;flex-direction:column;gap:6px}
+.m.u{align-items:flex-end}
+.bub{max-width:100%;overflow-wrap:anywhere}
+.u .bub{background:var(--acc);color:var(--accInk);padding:10px 16px;border-radius:20px 20px 6px 20px;max-width:88%;white-space:pre-wrap}
+.a .bub{padding:2px 0}
+.bub pre{background:var(--code);color:var(--codeInk);padding:14px;border-radius:14px;overflow-x:auto;font-size:14px}
+.bub code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+.bub :not(pre)>code{background:var(--line);padding:1px 6px;border-radius:6px}
+.acts{display:flex;gap:2px;opacity:.85}
+.acts button{padding:5px 10px;border-radius:999px;font-size:13px;color:var(--mute)}
+.acts button:hover{background:var(--line);color:var(--ink)}
+.think{display:flex;gap:5px;padding:8px 0}
+.think i{width:8px;height:8px;border-radius:50%;background:var(--acc);animation:b 1s infinite ease-in-out}
+.think i:nth-child(2){animation-delay:.15s}.think i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.err{background:var(--errbg);color:var(--err);padding:14px 16px;border-radius:14px;font-size:15px}
+.err b{display:block;margin-bottom:4px}
+.note{color:var(--mute);font-size:14px;font-style:italic}
+.hero{max-width:640px;margin:8vh auto 0;text-align:center;padding:0 8px}
+.hero h1{font-size:clamp(30px,6vw,44px);letter-spacing:-.03em;line-height:1.1;margin:18px 0 10px}
+.hero p{color:var(--mute);margin:0 0 24px}
+.sugg{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.sugg button{padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-size:14px}
+.sugg button:hover{border-color:var(--acc)}
+.comp{padding:8px 16px 14px}
+.box{max-width:760px;margin:0 auto;display:flex;align-items:flex-end;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:26px;padding:8px 8px 8px 18px}
+.box:focus-within{border-color:var(--acc)}
+.box textarea{flex:1;resize:none;border:0;background:none;outline:0;max-height:200px;padding:8px 0;line-height:1.5}
+.send{width:42px;height:42px;border-radius:50%;background:var(--acc);color:var(--accInk);display:grid;place-items:center;flex-shrink:0}
+.send[disabled]{opacity:.35;cursor:not-allowed}
+.hint{max-width:760px;margin:6px auto 0;text-align:center;color:var(--mute);font-size:12px}
+.veil{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:30;align-items:center;justify-content:center;padding:16px}
+.veil.open{display:flex}
+.modal{background:var(--panel);border-radius:22px;max-width:520px;width:100%;max-height:86%;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:12px}
+.modal h2{margin:0;font-size:20px}
+.modal label{font-weight:600;font-size:14px}
+.modal textarea{width:100%;min-height:110px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--bg)}
+.prov{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.prov small{color:var(--mute);display:block}
+.badge{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--line);color:var(--mute);white-space:nowrap}
+.badge.ok{background:var(--acc2);color:#04201d}
+.how{background:var(--bg);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--mute)}
+.how code{font-family:ui-monospace,Menlo,monospace;color:var(--ink)}
+@media (max-width:820px){
+ .side{position:fixed;inset:0 auto 0 0;z-index:20;transform:translateX(-100%);padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));box-shadow:4px 0 24px rgba(0,0,0,.25)}
+ .side.open{transform:none}
+ #menu{display:grid}
+ .hint{display:none}
+}
+.strip{max-width:760px;margin:0 auto 8px;display:flex;gap:8px;flex-wrap:wrap}
+.strip:empty{display:none}
+.thumb{position:relative;width:64px;height:64px}
+.thumb img{width:100%;height:100%;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.thumb button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:13px;line-height:1}
+.tool{height:42px;padding:0 12px;border-radius:999px;color:var(--mute);font-size:14px;white-space:nowrap}
+.tool:hover{background:var(--line);color:var(--ink)}
+.tool[aria-pressed="true"]{background:var(--acc);color:var(--accInk)}
+.bub img{display:block;max-width:100%;max-height:340px;border-radius:14px;margin-top:8px}
+#model{min-width:0}
+#mlabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:34vw}
+.field{width:100%;padding:12px 16px;border-radius:999px;border:1px solid var(--line);background:var(--bg)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.btn.line{border:1px solid var(--line);background:none}
+.btn.danger{color:var(--err)}
+.links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:14px;margin-top:10px}
+.links button{color:var(--acc);text-decoration:underline}
+.status{font-size:14px;color:var(--err)}
+.status.ok{color:var(--ink)}
+.status:empty{display:none}
+.plans{display:grid;gap:12px}
+.plan{border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.plan.pro{border:2px solid var(--acc)}
+.plan h3{margin:0;font-size:18px}
+.plan ul{margin:0;padding-left:18px;color:var(--mute);font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;display:none;z-index:40;max-width:90%}
+.toast.show{display:block}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+ <aside class="side" id="side" aria-label="Conversations">
+  <div class="brand"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4b3fe0"/><stop offset="1" stop-color="#12b5a6"/></linearGradient></defs><circle cx="16" cy="16" r="14" fill="url(#g)"/><path d="M16 6c2 5 5 8 10 10-5 2-8 5-10 10-2-5-5-8-10-10 5-2 8-5 10-10z" fill="#fff"/></svg>Lumen</div>
+  <button class="btn pri" id="new">+ Nouvelle conversation</button>
+  <input class="search" id="q" type="search" placeholder="Rechercher une conversation" aria-label="Rechercher">
+  <div class="list" id="list"></div>
+  <div class="foot"><button class="btn" id="theme">Thème</button><button class="btn" id="settings">Réglages</button></div>
+ </aside>
+ <main class="main">
+  <header>
+   <button class="round" id="menu" aria-label="Ouvrir le menu">☰</button>
+   <button class="chip" id="model"><span class="dot"></span><span id="mlabel">Aucun modèle connecté</span> ▾</button>
+   <span class="sp"></span>
+   <button class="chip" id="planBtn">Passer à Pro</button>
+   <button class="round" id="acct" aria-label="Mon compte">⊙</button>
+   <button class="round" id="theme2" aria-label="Changer de thème">◐</button>
+  </header>
+  <div class="msgs" id="msgs"><div class="wrap" id="wrap"></div></div>
+  <div class="comp">
+   <div class="strip" id="strip"></div>
+   <div class="box">
+    <button class="tool" id="attach" aria-label="Joindre une image">Joindre</button>
+    <button class="tool" id="gen" aria-pressed="false">✦ Image</button>
+    <input type="file" id="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+    <textarea id="in" rows="1" placeholder="Écrivez votre message…" aria-label="Message"></textarea>
+    <button class="send" id="send" aria-label="Envoyer">↑</button>
+   </div>
+   <div class="hint">Entrée pour envoyer · Maj+Entrée pour une nouvelle ligne</div>
+  </div>
+ </main>
+</div>
+
+<div class="veil" id="vModel"><div class="modal" role="dialog" aria-label="Modèles">
+ <h2>Modèles d’IA</h2>
+ <div id="provs"></div>
+ <div class="how">Un modèle n’apparaît comme disponible que si le serveur confirme que sa clé API est configurée. Ajoutez la clé côté serveur (<code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>, <code>GEMINI_API_KEY</code>), jamais dans cette page.</div>
+ <button class="btn pri" data-close>Fermer</button>
+</div></div>
+
+<div class="veil" id="vSet"><div class="modal" role="dialog" aria-label="Réglages">
+ <h2>Réglages</h2>
+ <label for="sys">Instructions système</label>
+ <textarea id="sys" placeholder="Ex. : Réponds en français, de façon concise."></textarea>
+ <button class="btn pri" id="saveSet">Enregistrer</button>
+ <button class="btn" data-close style="border:1px solid var(--line)">Annuler</button>
+</div></div>
+
+<div class="veil" id="vAuth"><div class="modal" role="dialog" aria-label="Compte">
+ <h2 id="aTitle">Connexion</h2>
+ <div id="aBody"></div>
+ <div class="status" id="aMsg" role="status"></div>
+ <button class="btn line" data-close>Fermer</button>
+</div></div>
+<div class="veil" id="vPlans"><div class="modal" role="dialog" aria-label="Offres">
+ <h2>Offres</h2>
+ <div class="plans" id="plansBody"></div>
+ <div class="status" id="pMsg" role="status"></div>
+ <button class="btn line" data-close>Fermer</button>
+</div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* Configuration : renseignez l'URL de votre backend (route SSE /api/chat) et la liste des modèles confirmés par le serveur. */
+/* authUrl : base des routes /login /signup /reset /logout /me /account. imageUrl : génération d'images. checkoutUrl / portalUrl : Stripe (créés côté serveur). */
+const CONFIG={apiUrl:"",modelsUrl:"",imageUrl:"",authUrl:"",checkoutUrl:"",portalUrl:"",proPrice:"",social:[]};
+const PROVIDERS=[
+ {id:"anthropic",name:"Anthropic Claude",env:"ANTHROPIC_API_KEY"},
+ {id:"openai",name:"OpenAI",env:"OPENAI_API_KEY"},
+ {id:"google",name:"Google Gemini",env:"GEMINI_API_KEY"},
+ {id:"oss",name:"Open source (compatible OpenAI)",env:"OPENAI_COMPAT_BASE_URL"}
+];
+const KEY="lumen:v1";
+let S={convs:[],active:null,model:null,system:"",models:[]};
+let ctl=null,busy=false,confirmDel=null,renaming=null;
+let pending=[],genMode=false;
+S.user=null;S.plan="free";
+const $=id=>document.getElementById(id);
+
+function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);S.convs=d.convs||[];S.active=d.active||null;S.system=d.system||"";S.model=d.model||null}}catch(e){}}
+function save(){try{const cv=S.convs.map(c=>({...c,messages:c.messages.map(m=>m.images?{...m,images:undefined,imgCount:m.images.length}:m)}));localStorage.setItem(KEY,JSON.stringify({convs:cv,active:S.active,system:S.system,model:S.model}))}catch(e){}}
+const uid=()=>Math.random().toString(36).slice(2,10);
+const cur=()=>S.convs.find(c=>c.id===S.active);
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function md(t){
+ const parts=t.split(/```/);
+ return parts.map((p,i)=>{
+  if(i%2){const nl=p.indexOf("\n");return "<pre><code>"+esc(nl>-1?p.slice(nl+1):p)+"</code></pre>"}
+  return esc(p).replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>");
+ }).join("");
+}
+
+function setTheme(){const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=dark?"light":"dark"}
+
+function renderList(){
+ const q=$("q").value.trim().toLowerCase();
+ const l=$("list");l.innerHTML="";
+ const items=S.convs.filter(c=>!q||c.title.toLowerCase().includes(q)||c.messages.some(m=>m.content.toLowerCase().includes(q)));
+ if(!items.length){l.innerHTML='<div class="empty-list">'+(q?"Aucun résultat.":"Vos conversations apparaîtront ici.")+"</div>";return}
+ items.forEach(c=>{
+  const d=document.createElement("div");d.className="item"+(c.id===S.active?" on":"");
+  if(renaming===c.id){
+   const i=document.createElement("input");i.value=c.title;i.setAttribute("aria-label","Nouveau titre");
+   const fin=()=>{c.title=i.value.trim()||c.title;renaming=null;save();renderList()};
+   i.onkeydown=e=>{if(e.key==="Enter")fin();if(e.key==="Escape"){renaming=null;renderList()}};
+   i.onblur=fin;d.appendChild(i);l.appendChild(d);setTimeout(()=>i.focus(),0);return;
+  }
+  const t=document.createElement("button");t.className="t";t.textContent=c.title;t.onclick=()=>{S.active=c.id;save();$("side").classList.remove("open");render()};
+  const r=document.createElement("button");r.className="ic";r.textContent="Renommer";r.onclick=()=>{renaming=c.id;renderList()};
+  const x=document.createElement("button");x.className="ic danger";x.textContent=confirmDel===c.id?"Confirmer ?":"Supprimer";
+  x.onclick=()=>{if(confirmDel===c.id){S.convs=S.convs.filter(k=>k.id!==c.id);if(S.active===c.id)S.active=null;confirmDel=null;save();render()}else{confirmDel=c.id;renderList()}};
+  d.append(t,r,x);l.appendChild(d);
+ });
+}
+
+function bubble(m,i,conv){
+ const w=document.createElement("div");w.className="m "+(m.role==="user"?"u":"a");
+ const b=document.createElement("div");b.className="bub";
+ if(m.role==="user"){b.textContent=m.content;addImgs(b,m)}
+ else{
+  if(m.error){b.innerHTML='<div class="err"><b>'+esc(m.error.title)+"</b>"+esc(m.error.text)+"</div>"}
+  else if(!m.content&&busy&&i===conv.messages.length-1){b.innerHTML='<div class="think" role="status" aria-label="L’IA réfléchit"><i></i><i></i><i></i></div>'}
+  else{b.innerHTML=md(m.content)+(m.stopped?'<div class="note">Génération interrompue.</div>':"");addImgs(b,m)}
+ }
+ w.appendChild(b);
+ const a=document.createElement("div");a.className="acts";
+ const add=(label,fn)=>{const x=document.createElement("button");x.textContent=label;x.onclick=fn;a.appendChild(x)};
+ if(m.role==="user"){
+  add("Copier",e=>copy(m.content,e.target));
+  add("Modifier",()=>{if(busy)return;conv.messages=conv.messages.slice(0,i);save();render();$("in").value=m.content;pending=(m.images||[]).slice();renderStrip();grow();$("in").focus()});
+ }else if(!(busy&&i===conv.messages.length-1)){
+  if(m.content)add("Copier",e=>copy(m.content,e.target));
+  add("Régénérer",()=>{if(busy)return;const prev=conv.messages[i-1];conv.messages=conv.messages.slice(0,i);save();if(m.gen&&prev)runImage(conv,prev.content);else run(conv)});
+  if(m.content)add("Partager",async e=>{try{if(navigator.share){await navigator.share({text:m.content})}else{copy(m.content,e.target)}}catch(_){}});
+ }
+ if(a.children.length)w.appendChild(a);
+ return w;
+}
+async function copy(t,btn){try{await navigator.clipboard.writeText(t);const o=btn.textContent;btn.textContent="Copié";setTimeout(()=>btn.textContent=o,1200)}catch(e){btn.textContent="Copie impossible"}}
+
+function render(){
+ renderList();
+ const c=cur(),w=$("wrap");w.innerHTML="";
+ const ml=S.models.find(m=>m.id===S.model);
+ $("mlabel").textContent=ml?ml.name:"Aucun modèle connecté";updHead();
+ document.querySelector(".chip .dot").style.background=ml?"var(--acc2)":"var(--mute)";
+ if(!c||!c.messages.length){
+  w.innerHTML='<div class="hero"><svg width="56" height="56" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="url(#g)"/><path d="M16 6c2 5 5 8 10 10-5 2-8 5-10 10-2-5-5-8-10-10 5-2 8-5 10-10z" fill="#fff"/></svg><h1>Que souhaitez-vous créer aujourd’hui ?</h1><p>Posez une question, collez un texte ou demandez du code.</p><div class="sugg"></div></div>';
+  ["Expliquer ce code","Traduire un texte en anglais","Résumer un document","M’aider à réviser un cours"].forEach(s=>{const b=document.createElement("button");b.textContent=s;b.onclick=()=>{$("in").value=s+" : ";grow();$("in").focus()};w.querySelector(".sugg").appendChild(b)});
+ }else c.messages.forEach((m,i)=>w.appendChild(bubble(m,i,c)));
+ $("send").innerHTML=busy?"■":"↑";$("send").setAttribute("aria-label",busy?"Arrêter":"Envoyer");
+ $("msgs").scrollTop=$("msgs").scrollHeight;
+}
+
+function NotConfigured(){const e=new Error("nc");e.nc=true;return e}
+async function* stream(conv,signal){
+ if(!CONFIG.apiUrl)throw NotConfigured();
+ if(!S.model)throw NotConfigured();
+ const r=await fetch(CONFIG.apiUrl,{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",signal,
+  body:JSON.stringify({model:S.model,system:S.system,messages:conv.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content,images:m.images}))})});
+ if(!r.ok){const e=new Error("http");e.status=r.status;throw e}
+ const rd=r.body.getReader(),dec=new TextDecoder();let buf="";
+ while(true){
+  const {done,value}=await rd.read();if(done)break;
+  buf+=dec.decode(value,{stream:true});
+  const lines=buf.split("\n");buf=lines.pop();
+  for(const ln of lines){
+   if(!ln.startsWith("data:"))continue;
+   const p=ln.slice(5).trim();if(p==="[DONE]")return;
+   try{const j=JSON.parse(p);if(j.delta)yield j.delta}catch(_){}
+  }
+ }
+}
+
+function explain(e){
+ if(e.nc&&e.what==="image")return{title:"La génération d’images n’est pas connectée",text:"Connectez un fournisseur d’images côté serveur (route /api/image avec sa clé API), puis renseignez CONFIG.imageUrl. Aucune image n’a été créée."};
+ if(e.nc)return{title:"Aucun fournisseur d’IA n’est connecté",text:"Ce site n’a pas encore de backend. Déployez la route /api/chat, ajoutez une clé API côté serveur (Anthropic, OpenAI ou Gemini), puis renseignez son adresse dans CONFIG.apiUrl. Ouvrez le sélecteur de modèle pour le détail."};
+ if(e.status===402)return{title:"Fonction réservée à l’offre Pro",text:"Cette fonction demande un abonnement Pro actif. Consultez les offres depuis le bouton en haut de l’écran."};
+ if(e.status===429)return{title:"Limite d’utilisation atteinte",text:"Vous avez dépassé votre quota de messages. Réessayez plus tard ou passez à une offre supérieure."};
+ if(e.status===401||e.status===403)return{title:"Accès refusé",text:"Connectez-vous pour utiliser le service."};
+ if(e.status)return{title:"Le fournisseur n’a pas répondu",text:"Le serveur a renvoyé l’erreur "+e.status+". Utilisez « Régénérer » pour réessayer."};
+ return{title:"Connexion impossible",text:"Vérifiez votre connexion réseau, puis utilisez « Régénérer »."};
+}
+
+async function run(conv){
+ const m={role:"assistant",content:""};conv.messages.push(m);
+ busy=true;ctl=new AbortController();render();
+ try{
+  for await(const d of stream(conv,ctl.signal)){m.content+=d;render()}
+ }catch(e){
+  if(e.name==="AbortError"){m.stopped=true}else m.error=explain(e);
+ }
+ busy=false;ctl=null;save();render();
+}
+
+function send(){
+ if(busy){ctl&&ctl.abort();return}
+ const t=$("in").value.trim();if(!t&&!(pending.length&&!genMode))return;
+ if(genMode){if(!S.user){openAuth("login");return}if(S.plan!=="pro"){openPlans();return}}
+ let c=cur();
+ if(!c){c={id:uid(),title:(t||"Image").slice(0,40),messages:[]};S.convs.unshift(c);S.active=c.id}
+ const imgs=genMode?[]:pending.slice();
+ c.messages.push({role:"user",content:t,images:imgs.length?imgs:undefined});
+ $("in").value="";pending=[];renderStrip();grow();save();
+ if(genMode)runImage(c,t);else run(c);
+}
+function grow(){const i=$("in");i.style.height="auto";i.style.height=Math.min(i.scrollHeight,200)+"px"}
+
+function openModels(){
+ const p=$("provs");p.innerHTML="";
+ PROVIDERS.forEach(v=>{
+  const ms=S.models.filter(m=>m.provider===v.id);
+  const d=document.createElement("div");d.className="prov";
+  d.innerHTML="<div><b>"+esc(v.name)+"</b><small>"+(ms.length?ms.map(m=>esc(m.name)).join(", "):"Variable serveur : "+v.env)+"</small></div>";
+  const b=document.createElement("span");b.className="badge"+(ms.length?" ok":"");b.textContent=ms.length?"Connecté":"Non configuré";d.appendChild(b);p.appendChild(d);
+ });
+ $("vModel").classList.add("open");
+}
+async function loadModels(){
+ if(!CONFIG.modelsUrl)return;
+ try{const r=await fetch(CONFIG.modelsUrl,{credentials:"include"});if(r.ok){S.models=await r.json();if(!S.models.find(m=>m.id===S.model))S.model=S.models[0]?S.models[0].id:null;render()}}catch(e){}
+}
+
+$("new").onclick=()=>{S.active=null;save();$("side").classList.remove("open");render();$("in").focus()};
+$("q").oninput=renderList;
+$("send").onclick=send;
+$("in").oninput=grow;
+$("in").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}};
+$("theme").onclick=$("theme2").onclick=setTheme;
+$("menu").onclick=()=>$("side").classList.toggle("open");
+$("model").onclick=openModels;
+$("settings").onclick=()=>{$("sys").value=S.system;$("vSet").classList.add("open")};
+$("saveSet").onclick=()=>{S.system=$("sys").value;save();$("vSet").classList.remove("open")};
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest(".veil").classList.remove("open"));
+document.querySelectorAll(".veil").forEach(v=>v.onclick=e=>{if(e.target===v)v.classList.remove("open")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".veil.open").forEach(v=>v.classList.remove("open"))});
+
+let aMode="login",delArm=false;
+const closeV=id=>$(id).classList.remove("open");
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("show"),3500)}
+function setMsg(id,t,ok){const e=$(id);e.textContent=t||"";e.className="status"+(ok?" ok":"")}
+function updHead(){$("acct").textContent=S.user?S.user.email[0].toUpperCase():"⊙";$("planBtn").textContent=S.plan==="pro"?"Pro":"Passer à Pro"}
+function safeSrc(s){return typeof s==="string"&&(s.startsWith("https:")||s.startsWith("data:image/"))}
+function addImgs(b,m){
+ (m.images||[]).filter(safeSrc).forEach((src,k)=>{const a=document.createElement("a");a.href=src;a.target="_blank";a.rel="noopener";if(m.role==="assistant")a.download="lumen-image-"+(k+1);const im=document.createElement("img");im.src=src;im.alt=m.role==="assistant"?"Image générée":"Image envoyée";a.appendChild(im);b.appendChild(a)});
+ if(!m.images&&m.imgCount){const n=document.createElement("div");n.className="note";n.textContent=m.imgCount+" image(s) non conservée(s) sur cet appareil.";b.appendChild(n)}
+}
+function renderStrip(){
+ const s=$("strip");s.innerHTML="";
+ pending.forEach((src,i)=>{const d=document.createElement("div");d.className="thumb";const im=document.createElement("img");im.src=src;im.alt="Image jointe "+(i+1);const x=document.createElement("button");x.textContent="×";x.setAttribute("aria-label","Retirer l’image");x.onclick=()=>{pending.splice(i,1);renderStrip()};d.append(im,x);s.appendChild(d)});
+}
+async function runImage(conv,prompt){
+ const m={role:"assistant",content:"",gen:true};conv.messages.push(m);
+ busy=true;ctl=new AbortController();render();
+ try{
+  if(!CONFIG.imageUrl){const e=NotConfigured();e.what="image";throw e}
+  const r=await fetch(CONFIG.imageUrl,{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",signal:ctl.signal,body:JSON.stringify({prompt})});
+  if(!r.ok){const e=new Error("http");e.status=r.status;throw e}
+  const j=await r.json();m.images=(j.images||[]).filter(safeSrc);m.content=j.caption||"";
+ }catch(e){if(e.name==="AbortError")m.stopped=true;else m.error=explain(e)}
+ busy=false;ctl=null;save();render();
+}
+$("attach").onclick=()=>$("file").click();
+$("file").onchange=async e=>{
+ const fs=[...e.target.files];e.target.value="";
+ for(const f of fs){
+  if(pending.length>=4){toast("4 images maximum par message.");break}
+  if(!/^image\/(png|jpeg|webp|gif)$/.test(f.type)){toast("Format non pris en charge : "+f.name);continue}
+  if(f.size>5*1024*1024){toast(f.name+" dépasse 5 Mo.");continue}
+  pending.push(await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(f)}));
+ }
+ renderStrip();
+};
+$("gen").onclick=()=>{genMode=!genMode;$("gen").setAttribute("aria-pressed",String(genMode));$("in").placeholder=genMode?"Décrivez l’image à créer…":"Écrivez votre message…";if(genMode){pending=[];renderStrip()}};
+async function loadMe(){
+ if(!CONFIG.authUrl)return;
+ try{const r=await fetch(CONFIG.authUrl+"/me",{credentials:"include"});if(r.ok){const j=await r.json();S.user=j.user||null;S.plan=j.plan||"free"}else{S.user=null;S.plan="free"}}catch(e){}
+ updHead();
+}
+async function postJson(path,body){
+ const r=await fetch(CONFIG.authUrl+path,{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify(body||{})});
+ let j={};try{j=await r.json()}catch(_){}
+ return{ok:r.ok,j};
+}
+function openAuth(mode){aMode=mode||"login";renderAuth();$("vAuth").classList.add("open")}
+function renderAuth(){
+ const b=$("aBody"),t=$("aTitle");setMsg("aMsg","");delArm=false;
+ if(S.user){
+  t.textContent="Mon compte";
+  b.innerHTML='<div class="prov" style="margin-bottom:10px"><div><b>'+esc(S.user.email)+'</b><small>Offre : '+(S.plan==="pro"?"Pro":"Gratuite")+'</small></div></div><div class="stack"><button class="btn pri" id="aPlan"></button><button class="btn line" id="aOut">Se déconnecter</button><button class="btn line danger" id="aDel">Supprimer mon compte et mes données</button></div>';
+  $("aPlan").textContent=S.plan==="pro"?"Gérer l’abonnement":"Passer à Pro";
+  $("aPlan").onclick=()=>{if(S.plan==="pro")portal();else{closeV("vAuth");openPlans()}};
+  $("aOut").onclick=async()=>{try{if(CONFIG.authUrl)await postJson("/logout")}catch(e){}S.user=null;S.plan="free";updHead();closeV("vAuth")};
+  $("aDel").onclick=async()=>{
+   if(!delArm){delArm=true;$("aDel").textContent="Confirmer la suppression définitive";return}
+   delArm=false;
+   try{const r=await fetch(CONFIG.authUrl+"/account",{method:"DELETE",credentials:"include"});if(r.ok){S.user=null;S.plan="free";S.convs=[];S.active=null;save();render();closeV("vAuth")}else setMsg("aMsg","Suppression impossible. Réessayez.")}catch(e){setMsg("aMsg","Connexion impossible. Réessayez.")}
+  };
+  return;
+ }
+ t.textContent=aMode==="signup"?"Créer un compte":aMode==="reset"?"Mot de passe oublié":"Connexion";
+ const pw=aMode==="reset"?"":'<input class="field" id="aPass" type="password" minlength="8" required autocomplete="'+(aMode==="signup"?"new-password":"current-password")+'" placeholder="Mot de passe (8 caractères minimum)" aria-label="Mot de passe">';
+ const lab=aMode==="signup"?"Créer mon compte":aMode==="reset"?"Envoyer le lien":"Se connecter";
+ const soc=(CONFIG.social||[]).map(p=>'<button type="button" class="btn line" data-soc="'+esc(p)+'">Continuer avec '+esc(p)+'</button>').join("");
+ b.innerHTML='<form id="aForm" class="stack"><input class="field" id="aEmail" type="email" required autocomplete="email" placeholder="Adresse e-mail" aria-label="Adresse e-mail">'+pw+'<button class="btn pri" type="submit">'+lab+'</button>'+soc+'</form><div class="links">'+(aMode!=="login"?'<button data-m="login">J’ai déjà un compte</button>':'')+(aMode!=="signup"?'<button data-m="signup">Créer un compte</button>':'')+(aMode==="login"?'<button data-m="reset">Mot de passe oublié</button>':'')+'</div>';
+ b.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>openAuth(x.dataset.m));
+ b.querySelectorAll("[data-soc]").forEach(x=>x.onclick=()=>{if(!CONFIG.authUrl)return setMsg("aMsg","La connexion sociale n’est pas configurée.");window.open(CONFIG.authUrl+"/oauth/"+x.dataset.soc,"_blank","noopener")});
+ $("aForm").onsubmit=async e=>{
+  e.preventDefault();
+  if(!CONFIG.authUrl){setMsg("aMsg","Les comptes ne sont pas encore disponibles : connectez un service d’authentification (par exemple Supabase Auth) puis renseignez CONFIG.authUrl. Aucun compte n’a été créé.");return}
+  try{
+   const {ok,j}=await postJson("/"+aMode,{email:$("aEmail").value.trim(),password:$("aPass")?$("aPass").value:undefined});
+   if(!ok){setMsg("aMsg",j.error||"Échec de l’opération. Vérifiez vos informations.");return}
+   if(aMode==="reset"){setMsg("aMsg","Si ce compte existe, un e-mail vient d’être envoyé.",true);return}
+   await loadMe();
+   if(S.user){renderAuth()}else setMsg("aMsg",j.message||"Vérifiez votre boîte mail pour confirmer votre adresse.",true);
+  }catch(err){setMsg("aMsg","Connexion impossible. Réessayez.")}
+ };
+}
+function openPlans(){
+ setMsg("pMsg","");
+ const price=CONFIG.proPrice||"Tarif défini dans votre configuration Stripe";
+ $("plansBody").innerHTML='<div class="plan"><h3>Gratuite</h3><ul><li>Nombre de messages limité</li><li>Modèles de base</li><li>Envoi d’images selon le quota</li></ul>'+(S.plan!=="pro"?'<span class="badge" style="align-self:flex-start">Offre actuelle</span>':"")+'</div><div class="plan pro"><h3>Pro</h3><div class="note">'+esc(price)+'</div><ul><li>Quotas plus élevés</li><li>Modèles premium configurés</li><li>Génération d’images</li><li>Plus de fichiers et d’images</li></ul><button class="btn pri" id="goPro"></button></div>';
+ $("goPro").textContent=S.plan==="pro"?"Gérer l’abonnement":"Passer à Pro";
+ $("goPro").onclick=()=>S.plan==="pro"?portal():checkout();
+ $("vPlans").classList.add("open");
+}
+async function stripeRedirect(url,msgId,missing){
+ if(!url){setMsg(msgId,missing);return}
+ try{const r=await fetch(url,{method:"POST",credentials:"include"});const j=await r.json();if(r.ok&&j.url&&j.url.startsWith("https://"))window.open(j.url,"_blank","noopener");else setMsg(msgId,j.error||"Impossible de continuer. Réessayez.")}catch(e){setMsg(msgId,"Connexion impossible. Réessayez.")}
+}
+function checkout(){
+ if(!S.user){closeV("vPlans");openAuth("login");return}
+ stripeRedirect(CONFIG.checkoutUrl,"pMsg","Le paiement n’est pas connecté. Configurez Stripe côté serveur (produit Pro, clés secrètes, webhook) puis renseignez CONFIG.checkoutUrl. Aucun abonnement n’a été créé.");
+}
+function portal(){
+ const id=$("vPlans").classList.contains("open")?"pMsg":"aMsg";
+ stripeRedirect(CONFIG.portalUrl,id,"Le portail de facturation n’est pas connecté. Renseignez CONFIG.portalUrl.");
+}
+$("planBtn").onclick=()=>S.plan==="pro"?openAuth():openPlans();
+$("acct").onclick=()=>openAuth("login");
+window.addEventListener("focus",loadMe);
+
+load();render();loadModels();loadMe();
+</script>
+</body>
+</html>
