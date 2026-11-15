@@ -187,7 +187,7 @@ header .sp{flex:1}
 <script>
 /* Configuration : renseignez l'URL de votre backend (route SSE /api/chat) et la liste des modèles confirmés par le serveur. */
 /* authUrl : base des routes /login /signup /reset /logout /me /account. imageUrl : génération d'images. checkoutUrl / portalUrl : Stripe (créés côté serveur). */
-const CONFIG={apiUrl:"",modelsUrl:"",imageUrl:"",authUrl:"",checkoutUrl:"",portalUrl:"",proPrice:"",social:[]};
+const CONFIG={apiUrl:"/api/chat",modelsUrl:"",imageUrl:"",authUrl:"",checkoutUrl:"",portalUrl:"",proPrice:"",social:[]};
 const PROVIDERS=[
  {id:"anthropic",name:"Anthropic Claude",env:"ANTHROPIC_API_KEY"},
  {id:"openai",name:"OpenAI",env:"OPENAI_API_KEY"},
